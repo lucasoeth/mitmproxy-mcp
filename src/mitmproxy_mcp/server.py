@@ -76,7 +76,7 @@ async def handle_call_tool(
                 }
                 flow_list.append(flow_info)
 
-        return [types.TextContent(type="text", text=json.dumps(flow_list))]
+        return [types.TextContent(type="text", text=json.dumps(flow_list, indent=2))]
     except Exception as e:
         return [types.TextContent(type="text", text=f"Error reading flows: {str(e)}")]
 
