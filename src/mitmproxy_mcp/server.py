@@ -39,7 +39,7 @@ async def handle_list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="get_flow_details",
-            description="Get details of a specific flow in a session",
+            description="Get details of specific flows in a session",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -47,12 +47,15 @@ async def handle_list_tools() -> list[types.Tool]:
                         "type": "string",
                         "description": "The ID of the session"
                     },
-                    "flow_index": {
-                        "type": "integer",
-                        "description": "The index of the flow"
+                    "flow_indexes": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "description": "The indexes of the flows"
                     }
                 },
-                "required": ["session_id", "flow_index"]
+                "required": ["session_id", "flow_indexes"]
             }
         )
     ]
@@ -106,40 +109,48 @@ async def list_flows(arguments: dict) -> list[types.TextContent]:
 
 async def get_flow_details(arguments: dict) -> list[types.TextContent]:
     """
-    Gets details of a specific flow from a mitmproxy dump file.
+    Gets details of specific flows from a mitmproxy dump file.
     """
     session_id = arguments.get("session_id")
-    flow_index = arguments.get("flow_index")
+    flow_indexes = arguments.get("flow_indexes")
 
     if not session_id:
         return [types.TextContent(type="text", text="Error: Missing session_id")]
-    if flow_index is None:
-        return [types.TextContent(type="text", text="Error: Missing flow_index")]
+    if not flow_indexes:
+        return [types.TextContent(type="text", text="Error: Missing flow_indexes")]
 
     try:
         flows = await get_flows_from_dump(session_id)
-        flow = flows[flow_index]
+        flow_details_list = []
 
-        if flow.type == "http":
-            request = flow.request
-            response = flow.response
-            flow_details = {
-                "method": request.method,
-                "url": request.url,
-                "request_headers": dict(request.headers),
-                "request_content": request.content.decode(errors="ignore"),
-                "status": response.status_code if response else None,
-                "response_headers": dict(response.headers) if response else None,
-                "response_content": response.content.decode(errors="ignore") if response else None
-            }
-            return [types.TextContent(type="text", text=json.dumps(flow_details, indent=2))]
-        else:
-            return [types.TextContent(type="text", text="Error: Flow is not an HTTP flow")]
+        for flow_index in flow_indexes:
+            try:
+                flow = flows[flow_index]
+
+                if flow.type == "http":
+                    request = flow.request
+                    response = flow.response
+                    flow_details = {
+                        "index": flow_index,
+                        "method": request.method,
+                        "url": request.url,
+                        "request_headers": dict(request.headers),
+                        "request_content": request.content.decode(errors="ignore"),
+                        "status": response.status_code if response else None,
+                        "response_headers": dict(response.headers) if response else None,
+                        "response_content": response.content.decode(errors="ignore") if response else None
+                    }
+                    flow_details_list.append(flow_details)
+                else:
+                    flow_details_list.append(f"Error: Flow {flow_index} is not an HTTP flow")
+
+            except IndexError:
+                flow_details_list.append(f"Error: Flow index {flow_index} out of range")
+
+        return [types.TextContent(type="text", text=json.dumps(flow_details_list, indent=2))]
 
     except FileNotFoundError:
         return [types.TextContent(type="text", text="Error: Session not found")]
-    except IndexError:
-        return [types.TextContent(type="text", text="Error: Flow index out of range")]
     except Exception as e:
         return [types.TextContent(type="text", text=f"Error reading flow details: {str(e)}")]
 
