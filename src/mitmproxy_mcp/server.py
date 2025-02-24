@@ -75,7 +75,7 @@ async def handle_list_tools() -> list[types.Tool]:
     return [
         types.Tool(
             name="list_flows",
-            description="List HTTP flows in a session",
+            description="Retrieves detailed HTTP request/response data including headers, content (or structure preview for large JSON), and metadata from specified flows",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -89,7 +89,7 @@ async def handle_list_tools() -> list[types.Tool]:
         ),
         types.Tool(
             name="get_flow_details",
-            description="Get details of specific flows in a session",
+            description="Lists HTTP requests/responses from a mitmproxy capture session, showing method, URL, and status codes",
             inputSchema={
                 "type": "object",
                 "properties": {
