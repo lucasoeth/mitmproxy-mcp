@@ -20,7 +20,7 @@ server = Server("mitmproxy-mcp")
 FLOW_CACHE = {}
 
 # Maximum content size in bytes before switching to structure preview
-MAX_CONTENT_SIZE = 10000
+MAX_CONTENT_SIZE = 2000
 
 # Known bot protection systems and their signatures
 BOT_PROTECTION_SIGNATURES = {
@@ -363,26 +363,40 @@ async def get_flow_details(arguments: dict) -> list[types.TextContent]:
                     # Handle large content
                     request_content_preview = None
                     response_content_preview = None
+
+                    flow_details = {}
                     
                     # Check if request content is large and is JSON
                     if include_content and len(request.content) > MAX_CONTENT_SIZE and isinstance(request_content, dict):
                         request_content_preview = generate_json_structure(request_content)
                         request_content = None  # Don't include full content
+                    elif include_content and len(request.content) > MAX_CONTENT_SIZE:
+                        if isinstance(request_content, str):
+                            request_content = request_content[:MAX_CONTENT_SIZE] + " ...[truncated]"
+                        else:
+                            request_content = request_content[:MAX_CONTENT_SIZE].decode(errors="ignore") + " ...[truncated]"
+                        flow_details["request_content_note"] = f"Request content truncated to {MAX_CONTENT_SIZE} bytes."
                     
                     # Check if response content is large and is JSON
                     if response and include_content and len(response.content) > MAX_CONTENT_SIZE and isinstance(response_content, dict):
                         response_content_preview = generate_json_structure(response_content)
                         response_content = None  # Don't include full content
+                    elif response and include_content and len(response.content) > MAX_CONTENT_SIZE:
+                        if isinstance(response_content, str):
+                            response_content = response_content[:MAX_CONTENT_SIZE] + " ...[truncated]"
+                        else:
+                            response_content = response_content[:MAX_CONTENT_SIZE].decode(errors="ignore") + " ...[truncated]"
+                        flow_details["response_content_note"] = f"Response content truncated to {MAX_CONTENT_SIZE} bytes."
 
                     # Build flow details
-                    flow_details = {
+                    flow_details.update( {
                         "index": flow_index,
                         "method": request.method,
                         "url": request.url,
                         "request_headers": dict(request.headers),
                         "status": response.status_code if response else None,
                         "response_headers": dict(response.headers) if response else None,
-                    }
+                    })
                     
                     # Add content or previews based on size
                     if include_content:
