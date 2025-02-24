@@ -13,6 +13,9 @@ DUMP_DIR = "/Users/lucas/Coding/mitmproxy-mcp/dumps"
 
 server = Server("mitmproxy-mcp")
 
+# Cache for storing flows per session
+FLOW_CACHE = {}
+
 @server.list_tools()
 async def handle_list_tools() -> list[types.Tool]:
     """
@@ -36,6 +39,23 @@ async def handle_list_tools() -> list[types.Tool]:
         )
     ]
 
+async def get_flows_from_dump(session_id: str) -> list:
+    """
+    Retrieves flows from the dump file, using the cache if available.
+    """
+    dump_file = os.path.join(DUMP_DIR, f"{session_id}.dump")
+    if not os.path.exists(dump_file):
+        raise FileNotFoundError("Session not found")
+
+    if session_id in FLOW_CACHE:
+        return FLOW_CACHE[session_id]
+    else:
+        with open(dump_file, "rb") as f:
+            reader = io.FlowReader(f)
+            flows = list(reader.stream())
+        FLOW_CACHE[session_id] = flows
+        return flows
+
 @server.call_tool()
 async def handle_call_tool(
     name: str, arguments: dict | None
@@ -54,14 +74,8 @@ async def handle_call_tool(
     if not session_id:
         return [types.TextContent(type="text", text="Error: Missing session_id")]
 
-    dump_file = os.path.join(DUMP_DIR, f"{session_id}.dump")
-    if not os.path.exists(dump_file):
-        return [types.TextContent(type="text", text="Error: Session not found")]
-
     try:
-        with open(dump_file, "rb") as f:
-            reader = io.FlowReader(f)
-            flows = list(reader.stream())
+        flows = await get_flows_from_dump(session_id)
 
         flow_list = []
         for i, flow in enumerate(flows):
@@ -77,6 +91,8 @@ async def handle_call_tool(
                 flow_list.append(flow_info)
 
         return [types.TextContent(type="text", text=json.dumps(flow_list, indent=2))]
+    except FileNotFoundError:
+        return [types.TextContent(type="text", text="Error: Session not found")]
     except Exception as e:
         return [types.TextContent(type="text", text=f"Error reading flows: {str(e)}")]
 
