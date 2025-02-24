@@ -130,15 +130,32 @@ async def get_flow_details(arguments: dict) -> list[types.TextContent]:
                 if flow.type == "http":
                     request = flow.request
                     response = flow.response
+
+                    def parse_json_content(content: bytes, headers: dict) -> any:
+                        """
+                        Attempts to parse content as JSON if the content type indicates JSON.
+                        Returns the parsed JSON or the raw content if parsing fails.
+                        """
+                        content_type = headers.get("Content-Type", "").lower() if headers else ""
+                        if "application/json" in content_type or "text/json" in content_type:
+                            try:
+                                return json.loads(content.decode(errors="ignore"))
+                            except json.JSONDecodeError:
+                                return content.decode(errors="ignore")
+                        return content.decode(errors="ignore")
+
+                    request_content = parse_json_content(request.content, dict(request.headers))
+                    response_content = parse_json_content(response.content, dict(response.headers) if response else {}) if response else None
+
                     flow_details = {
                         "index": flow_index,
                         "method": request.method,
                         "url": request.url,
                         "request_headers": dict(request.headers),
-                        "request_content": request.content.decode(errors="ignore"),
+                        "request_content": request_content,
                         "status": response.status_code if response else None,
                         "response_headers": dict(response.headers) if response else None,
-                        "response_content": response.content.decode(errors="ignore") if response else None
+                        "response_content": response_content,
                     }
                     flow_details_list.append(flow_details)
                 else:
