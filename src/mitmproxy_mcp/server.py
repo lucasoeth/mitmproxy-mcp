@@ -56,20 +56,10 @@ async def get_flows_from_dump(session_id: str) -> list:
         FLOW_CACHE[session_id] = flows
         return flows
 
-@server.call_tool()
-async def handle_call_tool(
-    name: str, arguments: dict | None
-) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
+async def list_flows(arguments: dict) -> list[types.TextContent]:
     """
-    Handle tool execution requests.
-    Currently supports listing HTTP flows from mitmproxy dump files.
+    Lists HTTP flows from a mitmproxy dump file.
     """
-    if name != "list_flows":
-        raise ValueError(f"Unknown tool: {name}")
-
-    if not arguments:
-        raise ValueError("Missing arguments")
-
     session_id = arguments.get("session_id")
     if not session_id:
         return [types.TextContent(type="text", text="Error: Missing session_id")]
@@ -95,6 +85,22 @@ async def handle_call_tool(
         return [types.TextContent(type="text", text="Error: Session not found")]
     except Exception as e:
         return [types.TextContent(type="text", text=f"Error reading flows: {str(e)}")]
+
+@server.call_tool()
+async def handle_call_tool(
+    name: str, arguments: dict | None
+) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
+    """
+    Handle tool execution requests.
+    Delegates to specific functions based on the tool name.
+    """
+    if not arguments:
+        raise ValueError("Missing arguments")
+
+    if name == "list_flows":
+        return await list_flows(arguments)
+    else:
+        raise ValueError(f"Unknown tool: {name}")
 
 async def main():
     # Run the server using stdin/stdout streams
