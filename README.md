@@ -45,7 +45,7 @@ On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
       "command": "uv",
       "args": [
         "--directory",
-        "/Users/lucas/Library/Application Support/Code/User/globalStorage/mitmproxy-mcp",
+        "/Users/lucas/Coding/mitmproxy-mcp",
         "run",
         "mitmproxy-mcp"
       ]
@@ -104,7 +104,7 @@ experience, we strongly recommend using the [MCP Inspector](https://github.com/m
 You can launch the MCP Inspector via [`npm`](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) with this command:
 
 ```bash
-npx @modelcontextprotocol/inspector uv --directory /Users/lucas/Library/Application Support/Code/User/globalStorage/mitmproxy-mcp run mitmproxy-mcp
+npx @modelcontextprotocol/inspector uv --directory /Users/lucas/Coding/mitmproxy-mcp run mitmproxy-mcp
 ```
 
 
