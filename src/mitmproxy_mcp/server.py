@@ -107,7 +107,7 @@ async def handle_list_tools() -> list[types.Tool]:
                     "include_content": {
                         "type": "boolean",
                         "description": "Whether to include full content in the response (default: true)",
-                        "default": true
+                        "default": True
                     }
                 },
                 "required": ["session_id", "flow_indexes"]
@@ -160,7 +160,7 @@ async def handle_list_tools() -> list[types.Tool]:
                     "extract_scripts": {
                         "type": "boolean",
                         "description": "Whether to extract and analyze JavaScript from the response (default: true)",
-                        "default": true
+                        "default": True
                     }
                 },
                 "required": ["session_id", "flow_index"]
