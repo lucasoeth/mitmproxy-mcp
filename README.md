@@ -2,6 +2,10 @@
 
 A MCP server project
 
+<a href="https://glama.ai/mcp/servers/gbqpifn5jt">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/gbqpifn5jt/badge" alt="mitmproxy-mcp Server MCP server" />
+</a>
+
 ## Components
 
 ### Resources
