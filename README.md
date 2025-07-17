@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/lucasoeth-mitmproxy-mcp-badge.png)](https://mseep.ai/app/lucasoeth-mitmproxy-mcp)
+
 # mitmproxy-mcp MCP server
 
 A MCP server project
